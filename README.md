@@ -91,7 +91,7 @@ A **hash** is a one-way mathematical function that converts any input (like a pa
 - **Deterministic**: The same password always produces the same hash
 - **Fast Computation**: Quick to calculate (important for security verification)
 - **Avalanche Effect**: Changing even one character in the input completely changes the hash output
-- **Fixed Length**: MD5 hashes are always 32 characters, SHA-256 hashes are always 64 characters
+- **Fixed Length**: In this game, MD5 hashes are 8 characters, SHA-256 hashes are 16 characters (simplified versions)
 
 **Why Passwords Are Hashed**:
 When you create an account, the website doesn't store your actual password. Instead, it stores the hash of your password. When you log in, it hashes what you typed and compares it to the stored hash. This way, even if the database is leaked, attackers don't immediately know your password.
@@ -116,13 +116,13 @@ When you create an account, the website doesn't store your actual password. Inst
    - Why salted hashes exist (adds randomness to prevent rainbow tables)
 
 **Hash Formats Explained**:
-- **MD5 Example**: `password` → `5f4dcc3b5aa765d61d8327deb882cf99`
-  - 32 characters (hex digits 0-9, a-f)
-  - Deprecated for security (too fast to brute force)
-  - Still commonly found in legacy systems
+- **MD5 Example**: `password` → `5f4dcc3b` (in-game version)
+  - 8 characters (simplified for gameplay)
+  - Real MD5 is 32 characters but game uses shorter hash for speed
 
-- **SHA-256 Example**: `password` → `5e884898da28047151d0e56f8dc62927515d3feb12e37f305ab01431d3375c1e`
-  - 64 characters (hex digits)
+- **SHA-256 Example**: `password` → `5e884898da28` (in-game version)
+  - 16 characters (simplified for gameplay)
+  - Real SHA-256 is 64 characters but game uses shorter hash for speed
   - More secure but still vulnerable to dictionary attacks
   - Modern standard for password hashing (though bcrypt/Argon2 are better)
 
