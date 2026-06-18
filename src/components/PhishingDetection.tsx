@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Mail, ArrowLeft, CheckCircle, XCircle, AlertTriangle, ExternalLink, Globe } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, XCircle, AlertTriangle, ExternalLink, Globe, Lightbulb } from 'lucide-react';
+import HowToPlay from './HowToPlay';
 
 interface PhishingIndicator {
   id: string;
@@ -108,6 +109,7 @@ export default function PhishingDetection({ onComplete, onBack, playerLevel }: P
   const [startTime] = useState(Date.now());
   const [completed, setCompleted] = useState<number[]>([]);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     const relevant = CHALLENGES.filter((c) => c.level <= playerLevel + 2);
@@ -136,6 +138,22 @@ export default function PhishingDetection({ onComplete, onBack, playerLevel }: P
       }
     }, 3000);
   }, [currentChallenge, verdict, currentIndex, challenges.length, indications]);
+
+  const giveUp = useCallback(() => {
+    if (!currentChallenge || showAnswer) return;
+
+    setShowAnswer(true);
+    setCompleted((c) => [...c, currentIndex]);
+
+    setTimeout(() => {
+      if (currentIndex < challenges.length - 1) {
+        setCurrentIndex((i) => i + 1);
+        setVerdict(null);
+        setIndications([]);
+        setShowAnswer(false);
+      }
+    }, 2000);
+  }, [currentChallenge, currentIndex, challenges.length, showAnswer]);
 
   const handleComplete = useCallback(() => {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
@@ -177,6 +195,10 @@ export default function PhishingDetection({ onComplete, onBack, playerLevel }: P
             <span className="font-mono text-sm">Exit Mission</span>
           </button>
           <div className="flex items-center gap-6">
+            <button type="button" onClick={() => setShowHelp(true)} className="flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors">
+              <Lightbulb className="w-5 h-5" />
+              <span className="sr-only">How to play</span>
+            </button>
             <span className="text-neon-green font-mono text-sm">
               {completed.length}/{challenges.length} ANALYZED
             </span>
@@ -294,9 +316,26 @@ export default function PhishingDetection({ onComplete, onBack, playerLevel }: P
             <button onClick={submitVerdict} disabled={verdict === null} className="cyber-button-primary w-full mt-4 py-3">
               Submit Analysis
             </button>
+            <button
+              type="button"
+              onClick={giveUp}
+              className="mt-3 w-full px-4 py-3 rounded-lg border border-neon-red text-neon-red hover:bg-neon-red/10 transition"
+            >
+              Give Up
+            </button>
           </div>
         )}
       </main>
+      <HowToPlay open={showHelp} onClose={() => setShowHelp(false)} title="Phishing Detection">
+        <h3 className="text-white">How to identify phishing</h3>
+        <p>Look for mismatched domains, spelling mistakes, unusual sender addresses, urgent or threatening language, and unexpected requests for sensitive information.</p>
+        <h4 className="mt-3">Checklist</h4>
+        <ul>
+          <li>Check the sender domain carefully — look for substitutions or extra prefixes.</li>
+          <li>Inspect links: hover (or read) the URL and ensure it matches the legitimate site.</li>
+          <li>Avoid urgent payment/gift-card requests — common scam indicator.</li>
+        </ul>
+      </HowToPlay>
     </div>
   );
 }

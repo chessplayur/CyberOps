@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Wifi, ArrowLeft, CheckCircle, XCircle, Server, Shield, Activity, Zap } from 'lucide-react';
+import { Wifi, ArrowLeft, CheckCircle, XCircle, Server, Shield, Activity, Zap, Lightbulb } from 'lucide-react';
+import HowToPlay from './HowToPlay';
 
 interface Host {
   ip: string;
@@ -111,6 +112,7 @@ export default function NetworkScanner({ onComplete, onBack, playerLevel }: Prop
   const [discoveredHosts, setDiscoveredHosts] = useState<string[]>([]);
   const [foundVuln, setFoundVuln] = useState(false);
   const [guess, setGuess] = useState('');
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     setChallenge(generateNetwork(playerLevel));
@@ -220,6 +222,10 @@ export default function NetworkScanner({ onComplete, onBack, playerLevel }: Prop
             <span className="font-mono text-sm">Exit Mission</span>
           </button>
           <div className="flex items-center gap-6">
+            <button type="button" onClick={() => setShowHelp(true)} className="flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors">
+              <Lightbulb className="w-5 h-5" />
+              <span className="sr-only">How to play</span>
+            </button>
             <span className="text-neon-cyan font-mono text-sm">
               {discoveredHosts.length}/{challenge.hosts.length} HOSTS
             </span>
@@ -331,6 +337,16 @@ export default function NetworkScanner({ onComplete, onBack, playerLevel }: Prop
           </div>
         </div>
       </main>
+      <HowToPlay open={showHelp} onClose={() => setShowHelp(false)} title="Network Scanner">
+        <h3 className="text-white">Goal</h3>
+        <p>Discover hosts on the simulated network, inspect open ports, and identify which host is vulnerable.</p>
+        <h4 className="mt-3">Quick tactics</h4>
+        <ul>
+          <li>Click <strong>Scan Network</strong> to discover hosts; then run <strong>Deep Scan Selected</strong> to inspect services.</li>
+          <li>Look for services commonly vulnerable (HTTP/80, HTTPS/443) flagged by the scanner.</li>
+          <li>Use logs to track host OS, open ports, and any CVE names mentioned.</li>
+        </ul>
+      </HowToPlay>
     </div>
   );
 }

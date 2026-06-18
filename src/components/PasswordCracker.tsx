@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Lock, ArrowLeft, Eye, EyeOff, Hash, CheckCircle, XCircle, Lightbulb, Zap } from 'lucide-react';
+import HowToPlay from './HowToPlay';
 
 interface PasswordChallenge {
   id: number;
@@ -16,6 +17,14 @@ const DICTIONARY = [
   'princess', 'football', 'baseball', 'soccer', 'hockey', 'michael', 'jennifer', 'jordan',
   'hunting', 'fishing', 'ranger', 'cowboy', 'hunter', 'killer', 'sniper', 'ninja',
 ];
+
+const EXTRA_PASSWORDS = [
+  'sunshine123', 'qazwsx', 'letmein123', 'dragonfire', 'cyberpunk', 'securepass', 'hacker123',
+  'middleware', 'bluebird', 'rocketman', 'moonshine', 'keystone', 'vault', 'nightfall', 'winter2024',
+  'nebula2025', 'matrixing', 'blackhat', 'firewall47', 'protocol', 'quantum1', 'redteam',
+];
+
+const PASSWORD_POOL = [...DICTIONARY, ...EXTRA_PASSWORDS];
 
 const HASH_TYPES: Record<string, { name: string; hash: (s: string) => string }> = {
   MD5: {
@@ -47,7 +56,10 @@ function generateChallenges(level: number): PasswordChallenge[] {
   const numChallenges = Math.min(3 + level, 5);
 
   for (let i = 0; i < numChallenges; i++) {
-    const password = DICTIONARY[Math.floor(Math.random() * DICTIONARY.length)];
+    const useCommon = Math.random() < 0.25;
+    const password = useCommon
+      ? DICTIONARY[Math.floor(Math.random() * DICTIONARY.length)]
+      : EXTRA_PASSWORDS[Math.floor(Math.random() * EXTRA_PASSWORDS.length)];
     const hashType = level <= 2 ? 'MD5' : 'SHA256';
     const hash = HASH_TYPES[hashType].hash(password);
 
@@ -78,6 +90,7 @@ export default function PasswordCracker({ onComplete, onBack, playerLevel }: Pro
   const [startTime] = useState(Date.now());
   const [hintsUsed, setHintsUsed] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string; success: boolean } | null>(null);
   const [scanning, setScanning] = useState(false);
   const [cracked, setCracked] = useState<number[]>([]);
@@ -132,23 +145,43 @@ export default function PasswordCracker({ onComplete, onBack, playerLevel }: Pro
     onComplete('password', playerLevel, score, elapsed, hintsUsed);
   }, [onComplete, playerLevel, score, startTime, hintsUsed]);
 
+  const giveUp = useCallback(() => {
+    if (!currentChallenge || scanning) return;
+
+    setScanning(false);
+    setFeedback({ message: `GIVE UP — correct password was "${currentChallenge.password}"`, success: false });
+    setCracked((c) => [...c, currentIndex]);
+
+    setTimeout(() => {
+      if (currentIndex < challenges.length - 1) {
+        setCurrentIndex((i) => i + 1);
+        setGuess('');
+        setShowHint(false);
+        setFeedback(null);
+      }
+    }, 2000);
+  }, [currentChallenge, currentIndex, challenges.length, scanning]);
+
   const dictionaryAttack = useCallback(() => {
     if (!currentChallenge || scanning) return;
     setScanning(true);
+    setFeedback(null);
 
     let index = 0;
     const interval = setInterval(() => {
       if (index >= DICTIONARY.length) {
         clearInterval(interval);
         setScanning(false);
+        setFeedback({ message: 'Dictionary attack failed. Password not found in wordlist.', success: false });
         return;
       }
 
       const tryPassword = DICTIONARY[index];
-      if (HASH_TYPES[currentChallenge.hashType].hash(tryPassword) === currentChallenge.hash) {
+      if (tryPassword.toLowerCase() === currentChallenge.password.toLowerCase()) {
         setGuess(tryPassword);
         clearInterval(interval);
         setScanning(false);
+        return;
       }
       index++;
     }, 50);
@@ -182,6 +215,7 @@ export default function PasswordCracker({ onComplete, onBack, playerLevel }: Pro
   }
 
   return (
+    <>
     <div className="min-h-screen">
       <div className="scanline-effect" />
       <header className="border-b border-cyber-border bg-cyber-panel/80 backdrop-blur-sm sticky top-0 z-40">
@@ -191,6 +225,10 @@ export default function PasswordCracker({ onComplete, onBack, playerLevel }: Pro
             <span className="font-mono text-sm">Exit Mission</span>
           </button>
           <div className="flex items-center gap-6">
+            <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors">
+              <Lightbulb className="w-5 h-5" />
+              <span className="sr-only">How to play</span>
+            </button>
             <span className="text-neon-red font-mono text-sm">
               {cracked.length}/{challenges.length} CRACKED
             </span>
@@ -290,6 +328,14 @@ export default function PasswordCracker({ onComplete, onBack, playerLevel }: Pro
               <Lightbulb className="w-4 h-4" />
               {showHint ? 'Hint Used' : 'Get Hint'}
             </button>
+            <button
+              type="button"
+              onClick={giveUp}
+              disabled={scanning}
+              className="px-4 py-3 rounded-lg border border-neon-red text-neon-red hover:bg-neon-red/10 transition"
+            >
+              Give Up
+            </button>
           </div>
 
           <div className="mt-4 flex items-center gap-2">
@@ -305,5 +351,25 @@ export default function PasswordCracker({ onComplete, onBack, playerLevel }: Pro
         </div>
       </main>
     </div>
+      <HowToPlay open={showHelp} onClose={() => setShowHelp(false)} title="Password Cracker">
+        <h3 className="text-white">What is happening</h3>
+        <p>
+          Each challenge shows a hashed password and a hash algorithm. Your goal is to find the original password.
+        </p>
+        <h4 className="mt-3">Quick tips</h4>
+        <ul>
+          <li>Hashes are one-way values — in this game they are simplified and reversible by matching algorithms.</li>
+          <li>Use <strong>Dictionary Attack</strong> to try common passwords automatically.</li>
+          <li>Click <strong>Get Hint</strong> to reveal length and starting letter (penalty applies).</li>
+          <li>Try common variants (lowercase, numbers, simple substitutions) when guessing.</li>
+        </ul>
+        <h4 className="mt-3">Example steps</h4>
+        <ol>
+          <li>Note the hash type (MD5 / SHA-256) shown above.</li>
+          <li>Try the dictionary attack; it will auto-fill if a match is found.</li>
+          <li>If that fails, use hints to narrow possibilities, then type your guess and press <em>Crack Password</em>.</li>
+        </ol>
+      </HowToPlay>
+    </>
   );
 }

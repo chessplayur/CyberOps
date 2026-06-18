@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './lib/supabase';
 import { Shield, Terminal, Lock, Database, Wifi, Mail, Trophy, ChevronRight, Skull, Zap } from 'lucide-react';
 import PasswordCracker from './components/PasswordCracker';
 import SQLInjection from './components/SQLInjection';
@@ -8,11 +8,6 @@ import CipherChallenge from './components/CipherChallenge';
 import PhishingDetection from './components/PhishingDetection';
 import Leaderboard from './components/Leaderboard';
 import PlayerStats from './components/PlayerStats';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 type ChallengeType = 'password' | 'sql' | 'network' | 'cipher' | 'phishing' | null;
 type GameView = 'intro' | 'register' | 'hub' | 'challenge' | 'leaderboard';
@@ -88,32 +83,50 @@ function App() {
   }, []);
 
   const registerPlayer = useCallback(async (username: string) => {
-    const { data, error } = await supabase
-      .from('players')
-      .insert({ username: username.trim() })
-      .select()
-      .single();
+    try {
+      const trimmed = username.trim();
+      const { data, error } = await supabase
+        .from('players')
+        .insert({ username: trimmed })
+        .select()
+        .single();
 
-    if (error) {
-      if (error.code === '23505') {
-        const { data: existing } = await supabase
-          .from('players')
-          .select('*')
-          .eq('username', username.trim())
-          .single();
-        if (existing) {
-          setPlayer(existing);
-          localStorage.setItem('cyberops_player', JSON.stringify(existing));
-          setView('hub');
+      if (error) {
+        // If unique constraint, try to fetch existing user and treat as login
+        // Supabase error may include `code` or `status` — surface message when possible
+        console.warn('Supabase insert error', error);
+        if ((error as any).code === '23505' || (error as any).status === 409) {
+          const { data: existing, error: fetchErr } = await supabase
+            .from('players')
+            .select('*')
+            .eq('username', trimmed)
+            .single();
+          if (fetchErr) {
+            console.warn('Failed to fetch existing player after conflict', fetchErr);
+            return { success: false, message: fetchErr.message || 'Registration conflict but failed to retrieve existing player.' };
+          }
+          if (existing) {
+            setPlayer(existing);
+            localStorage.setItem('cyberops_player', JSON.stringify(existing));
+            setView('hub');
+            return { success: true };
+          }
         }
-      }
-      return;
-    }
 
-    if (data) {
-      setPlayer(data);
-      localStorage.setItem('cyberops_player', JSON.stringify(data));
-      setView('hub');
+        return { success: false, message: error.message || 'Registration failed' };
+      }
+
+      if (data) {
+        setPlayer(data);
+        localStorage.setItem('cyberops_player', JSON.stringify(data));
+        setView('hub');
+        return { success: true };
+      }
+
+      return { success: false, message: 'No response from server.' };
+    } catch (err: any) {
+      console.error('Unexpected error during registerPlayer', err);
+      return { success: false, message: err?.message || String(err) };
     }
   }, []);
 
@@ -341,15 +354,26 @@ function IntroScreen({ onStart, onLeaderboard }: { onStart: () => void; onLeader
   );
 }
 
-function RegisterScreen({ onRegister }: { onRegister: (username: string) => void }) {
+function RegisterScreen({ onRegister }: { onRegister: (username: string) => Promise<{ success: boolean; message?: string }> }) {
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
     if (username.trim()) {
       setLoading(true);
-      onRegister(username);
+      try {
+        const result = await onRegister(username);
+        if (!result.success) {
+          setLoading(false);
+          setErrorMsg(result.message || 'Registration failed. Please try a different callsign.');
+        }
+      } catch (err: any) {
+        setLoading(false);
+        setErrorMsg(err?.message || 'Registration failed. Please try again.');
+      }
     }
   };
 
@@ -398,6 +422,12 @@ function RegisterScreen({ onRegister }: { onRegister: (username: string) => void
             )}
           </button>
         </form>
+
+        {errorMsg && (
+          <div className="mt-4 text-center text-sm text-red-400 font-mono">
+            {errorMsg}
+          </div>
+        )}
 
         <p className="mt-6 text-center text-xs text-gray-500 font-mono">
           Your progress will be saved automatically

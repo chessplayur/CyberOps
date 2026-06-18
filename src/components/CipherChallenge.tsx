@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, ArrowLeft, CheckCircle, Key, Lock, Unlock } from 'lucide-react';
+import { Shield, ArrowLeft, CheckCircle, Key, Lock, Unlock, Lightbulb } from 'lucide-react';
+import HowToPlay from './HowToPlay';
 
 interface CipherChallenge {
   id: number;
@@ -112,6 +113,7 @@ export default function CipherChallenge({ onComplete, onBack, playerLevel }: Pro
   const [completed, setCompleted] = useState<number[]>([]);
   const [feedback, setFeedback] = useState<{ message: string; success: boolean } | null>(null);
   const [decoding, setDecoding] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     const numChallenges = Math.min(3 + playerLevel, 5);
@@ -165,6 +167,22 @@ export default function CipherChallenge({ onComplete, onBack, playerLevel }: Pro
     }
   }, [showHint, currentChallenge]);
 
+  const giveUp = useCallback(() => {
+    if (!currentChallenge) return;
+
+    setFeedback({ message: `GIVE UP — the plaintext is "${currentChallenge.plaintext}"`, success: false });
+    setCompleted((c) => [...c, currentIndex]);
+
+    setTimeout(() => {
+      if (currentIndex < challenges.length - 1) {
+        setCurrentIndex((i) => i + 1);
+        setGuess('');
+        setShowHint(false);
+        setFeedback(null);
+      }
+    }, 2000);
+  }, [currentChallenge, currentIndex, challenges.length]);
+
   const handleComplete = useCallback(() => {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     onComplete('cipher', playerLevel, score, elapsed, hintsUsed);
@@ -201,6 +219,10 @@ export default function CipherChallenge({ onComplete, onBack, playerLevel }: Pro
             <span className="font-mono text-sm">Exit Mission</span>
           </button>
           <div className="flex items-center gap-6">
+            <button type="button" onClick={() => setShowHelp(true)} className="flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors">
+              <Lightbulb className="w-5 h-5" />
+              <span className="sr-only">How to play</span>
+            </button>
             <span className="text-neon-purple font-mono text-sm">
               {completed.length}/{challenges.length} DECODED
             </span>
@@ -268,6 +290,13 @@ export default function CipherChallenge({ onComplete, onBack, playerLevel }: Pro
             <button onClick={useHint} disabled={showHint} className="cyber-button-success flex items-center gap-2">
               {showHint ? 'Hint Used' : 'Get Hint'}
             </button>
+            <button
+              type="button"
+              onClick={giveUp}
+              className="px-4 py-3 rounded-lg border border-neon-red text-neon-red hover:bg-neon-red/10 transition"
+            >
+              Give Up
+            </button>
           </div>
 
           <div className="mt-6 space-y-2">
@@ -281,6 +310,16 @@ export default function CipherChallenge({ onComplete, onBack, playerLevel }: Pro
           </div>
         </div>
       </main>
+      <HowToPlay open={showHelp} onClose={() => setShowHelp(false)} title="Cipher Decoder">
+        <h3 className="text-white">Overview</h3>
+        <p>Decode the ciphertext using the indicated cipher type. Common techniques include Caesar shifts, Vigenère keys, substitution, and reversing the text.</p>
+        <h4 className="mt-3">Tips</h4>
+        <ul>
+          <li>For Caesar ciphers, try shifting letters forward/backward; frequency helps for longer text.</li>
+          <li>For Vigenère, common short keys are often used in this game — try the shown key hints.</li>
+          <li>Use the hint if stuck; it reveals a helpful clue but costs points.</li>
+        </ul>
+      </HowToPlay>
     </div>
   );
 }

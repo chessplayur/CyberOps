@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Database, ArrowLeft, CheckCircle, XCircle, Terminal, Shield } from 'lucide-react';
+import { Database, ArrowLeft, CheckCircle, XCircle, Terminal, Shield, Lightbulb } from 'lucide-react';
+import HowToPlay from './HowToPlay';
 
 interface SQLChallenge {
   id: number;
@@ -60,6 +61,7 @@ export default function SQLInjection({ onComplete, onBack, playerLevel }: Props)
   const [startTime] = useState(Date.now());
   const [hintsUsed, setHintsUsed] = useState(0);
   const [feedback, setFeedback] = useState<{ message: string; success: boolean } | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   const [revealedData, setRevealedData] = useState<string | null>(null);
   const [completed, setCompleted] = useState<number[]>([]);
 
@@ -109,6 +111,23 @@ export default function SQLInjection({ onComplete, onBack, playerLevel }: Props)
     }
   }, [currentChallenge, query, validateInjection, currentIndex, challenges.length]);
 
+  const giveUp = useCallback(() => {
+    if (!currentChallenge) return;
+
+    setFeedback({ message: 'GIVE UP — query revealed the secret data below', success: false });
+    setRevealedData(`EXTRACTED DATA:\n[+] ${currentChallenge.targetColumn}: ${currentChallenge.secretValue}\n[+] Table: ${currentChallenge.table}`);
+    setCompleted((c) => [...c, currentIndex]);
+
+    setTimeout(() => {
+      if (currentIndex < challenges.length - 1) {
+        setCurrentIndex((i) => i + 1);
+        setQuery('');
+        setRevealedData(null);
+        setFeedback(null);
+      }
+    }, 2000);
+  }, [currentChallenge, currentIndex, challenges.length]);
+
   const handleComplete = useCallback(() => {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     onComplete('sql', playerLevel, score, elapsed, hintsUsed);
@@ -145,12 +164,28 @@ export default function SQLInjection({ onComplete, onBack, playerLevel }: Props)
             <span className="font-mono text-sm">Exit Mission</span>
           </button>
           <div className="flex items-center gap-6">
+            <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 text-gray-400 hover:text-neon-cyan transition-colors">
+              <Lightbulb className="w-5 h-5" />
+              <span className="sr-only">How to play</span>
+            </button>
             <span className="text-neon-orange font-mono text-sm">
               {completed.length}/{challenges.length} BREACHED
             </span>
             <span className="text-neon-cyan font-display">{score} PTS</span>
           </div>
         </div>
+        <HowToPlay open={showHelp} onClose={() => setShowHelp(false)} title="SQL Injection">
+          <h3 className="text-white">Overview</h3>
+          <p>These challenges simulate vulnerable SQL queries. Your job is to craft an input that manipulates the query to return secret data.</p>
+          <h4 className="mt-3">Safety note</h4>
+          <p>Only perform these exercises in this sandbox. Never attempt SQL injection against systems you don't own.</p>
+          <h4 className="mt-3">Hints & strategy</h4>
+          <ul>
+            <li>Common payloads: <code>' OR '1'='1</code>, <code>' UNION SELECT ... --</code></li>
+            <li>Start with simple boolean bypasses to bypass authentication challenges.</li>
+            <li>For extraction tasks, use UNION SELECT patterns to reveal columns.</li>
+          </ul>
+        </HowToPlay>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
@@ -213,6 +248,13 @@ export default function SQLInjection({ onComplete, onBack, playerLevel }: Props)
             <button onClick={executeQuery} disabled={!query} className="cyber-button-danger flex items-center gap-2">
               <Terminal className="w-4 h-4" />
               Execute Query
+            </button>
+            <button
+              type="button"
+              onClick={giveUp}
+              className="px-4 py-3 rounded-lg border border-neon-red text-neon-red hover:bg-neon-red/10 transition"
+            >
+              Give Up
             </button>
           </div>
 
