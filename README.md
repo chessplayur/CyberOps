@@ -82,6 +82,64 @@ This project demonstrates how gamification can make security education engaging 
 
 **Educational Value**: Players learn that strong passwords cannot be easily guessed even with common wordlists, and understanding hash functions is critical.
 
+#### What is a Hash? (Beginner's Guide)
+
+A **hash** is a one-way mathematical function that converts any input (like a password) into a fixed-length string of characters. Think of it like a fingerprint—you can't reverse the fingerprint to get the original person back, but two identical people would have identical fingerprints.
+
+**Key Properties of Hashes**:
+- **One-way**: You cannot reverse a hash to get the original password
+- **Deterministic**: The same password always produces the same hash
+- **Fast Computation**: Quick to calculate (important for security verification)
+- **Avalanche Effect**: Changing even one character in the input completely changes the hash output
+- **Fixed Length**: MD5 hashes are always 32 characters, SHA-256 hashes are always 64 characters
+
+**Why Passwords Are Hashed**:
+When you create an account, the website doesn't store your actual password. Instead, it stores the hash of your password. When you log in, it hashes what you typed and compares it to the stored hash. This way, even if the database is leaked, attackers don't immediately know your password.
+
+**How to Crack Hashes**:
+
+1. **Dictionary Attack** (Used in Password Cracker)
+   - Try common passwords from a pre-made list
+   - Hash each password and compare to the target hash
+   - If a match is found → Password cracked!
+   - Works well for weak/common passwords
+   - Fails if password isn't in the dictionary (like "MyComplexPass2024!")
+
+2. **Brute Force Attack** (Not implemented in this game, but real attackers use it)
+   - Try every possible character combination
+   - Very slow but eventually finds any password
+   - Modern computers can try billions per second
+
+3. **Rainbow Tables** (Advanced technique)
+   - Pre-computed hashes of billions of passwords
+   - Massive storage but extremely fast lookups
+   - Why salted hashes exist (adds randomness to prevent rainbow tables)
+
+**Hash Formats Explained**:
+- **MD5 Example**: `password` → `5f4dcc3b5aa765d61d8327deb882cf99`
+  - 32 characters (hex digits 0-9, a-f)
+  - Deprecated for security (too fast to brute force)
+  - Still commonly found in legacy systems
+
+- **SHA-256 Example**: `password` → `5e884898da28047151d0e56f8dc62927515d3feb12e37f305ab01431d3375c1e`
+  - 64 characters (hex digits)
+  - More secure but still vulnerable to dictionary attacks
+  - Modern standard for password hashing (though bcrypt/Argon2 are better)
+
+**Strategies for Winning Password Cracker**:
+1. **Use the Hint**: Reveals password length and first letter—narrows down possibilities significantly
+2. **Try Dictionary Attack First**: ~25% of challenges are common passwords—you might get lucky
+3. **Manual Guessing**: Think about common patterns:
+   - Common words + numbers (e.g., `Dragon2025`, `Admin123`)
+   - l33t speak variations (e.g., `P@ssw0rd`, `L3tm31n`)
+   - Seasonal words (e.g., `Winter2024`, `Holiday21`)
+   - Pop culture references (e.g., `Batman`, `StarWars`)
+4. **Give Up Strategically**: If stuck after hint and attack fail, give up to move to next challenge
+5. **Learn from Failures**: Each revealed password teaches you common patterns attackers exploit
+
+**Real-World Context**:
+This mission mirrors why companies enforce strong password policies. Weak passwords can be cracked in seconds. Strong passwords (16+ characters, mixed case, numbers, symbols, no dictionary words) are exponentially harder to crack and may take years even with massive computing power.
+
 ---
 
 ### 2. **SQL Injection** (Intermediate)

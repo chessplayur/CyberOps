@@ -352,23 +352,75 @@ export default function PasswordCracker({ onComplete, onBack, playerLevel }: Pro
       </main>
     </div>
       <HowToPlay open={showHelp} onClose={() => setShowHelp(false)} title="Password Cracker">
-        <h3 className="text-white">What is happening</h3>
+        <h3 className="text-white">What is happening?</h3>
         <p>
-          Each challenge shows a hashed password and a hash algorithm. Your goal is to find the original password.
+          Each challenge shows a <strong>hashed password</strong> (a cryptographic fingerprint) and a hash algorithm. Your goal is to find the original password.
         </p>
-        <h4 className="mt-3">Quick tips</h4>
-        <ul>
-          <li>Hashes are one-way values — in this game they are simplified and reversible by matching algorithms.</li>
-          <li>Use <strong>Dictionary Attack</strong> to try common passwords automatically.</li>
-          <li>Click <strong>Get Hint</strong> to reveal length and starting letter (penalty applies).</li>
-          <li>Try common variants (lowercase, numbers, simple substitutions) when guessing.</li>
+
+        <h4 className="mt-4 text-neon-cyan">What is a Hash?</h4>
+        <p>
+          A hash is a one-way mathematical function. Think of it like a fingerprint—you can't reverse it to get the original person back. 
+          The same password always creates the same hash, but different passwords create completely different hashes.
+        </p>
+        <ul className="mt-2">
+          <li><strong>MD5 Hash</strong>: 32 characters (looks like: 5f4dcc3b5aa765d61d8327deb882cf99)</li>
+          <li><strong>SHA-256 Hash</strong>: 64 characters (looks like: 5e884898da28047151d0e56f8dc629275...)</li>
         </ul>
-        <h4 className="mt-3">Example steps</h4>
-        <ol>
-          <li>Note the hash type (MD5 / SHA-256) shown above.</li>
-          <li>Try the dictionary attack; it will auto-fill if a match is found.</li>
-          <li>If that fails, use hints to narrow possibilities, then type your guess and press <em>Crack Password</em>.</li>
+
+        <h4 className="mt-4 text-neon-cyan">Step-by-Step Guide to Cracking</h4>
+        <ol className="mt-2 space-y-2">
+          <li><strong>Step 1 - Check the Hash Type</strong>: Look at the terminal—it shows "MD5" or "SHA-256". This tells you the algorithm used.</li>
+          <li><strong>Step 2 - Use Dictionary Attack (25% Success Rate)</strong>: Click the "Dictionary Attack" button. It tries common passwords automatically. If it finds a match, you win! If not, move to Step 3.</li>
+          <li><strong>Step 3 - Use a Hint (Costs 30 points)</strong>: Click "Get Hint" to reveal:
+            <ul className="ml-4 mt-1">
+              <li>Password length (e.g., "8 characters")</li>
+              <li>First letter (e.g., "starts with D")</li>
+            </ul>
+          </li>
+          <li><strong>Step 4 - Guess the Password</strong>: Based on the hint, guess common passwords that match. Type your guess and click "Crack Password".</li>
+          <li><strong>Step 5 - If Stuck, Give Up</strong>: Click "Give Up" to reveal the answer (no points awarded, but you learn the password).</li>
         </ol>
+
+        <h4 className="mt-4 text-neon-cyan">Password Patterns to Try</h4>
+        <div className="bg-cyber-dark/50 rounded p-3 mt-2 text-sm space-y-1">
+          <p><strong>After you get a hint like "8 characters, starts with D":</strong></p>
+          <ul className="ml-4 mt-1">
+            <li>Common words: dragon, dolphin, diamond, danger, dancer</li>
+            <li>Words + numbers: dragon1, dragon2, dragon99, dragon123</li>
+            <li>Pop culture: Dragon (from How to Train Your Dragon), Draco (from Harry Potter)</li>
+            <li>Seasonal: Dragon2024, Dragon2025</li>
+          </ul>
+        </div>
+
+        <h4 className="mt-4 text-neon-cyan">Example Challenge Walkthrough</h4>
+        <div className="bg-neon-purple/10 rounded p-3 mt-2 text-sm border border-neon-purple/30">
+          <p><strong>You see:</strong></p>
+          <p className="font-mono mt-1">Hash: 5f4dcc3b5aa765d61d8327deb882cf99</p>
+          <p className="font-mono">Type: MD5</p>
+          <p className="mt-2"><strong>Your actions:</strong></p>
+          <ol className="ml-4 mt-1">
+            <li>Click "Dictionary Attack" → Fails (not a common password)</li>
+            <li>Click "Get Hint" → "8 characters, starts with P"</li>
+            <li>Think: P + 8 chars could be "password" (8 chars), "python99", "princess"</li>
+            <li>Type "password" and click "Crack Password"</li>
+            <li>Success! You cracked it and earned 100 points!</li>
+          </ol>
+        </div>
+
+        <h4 className="mt-4 text-neon-cyan">Why This Matters (Real-World Context)</h4>
+        <p>
+          Cybersecurity experts break into systems by guessing weak passwords. Companies enforce strong password rules 
+          (16+ characters, mixed case, numbers, symbols) to prevent this. This mission teaches you how weak passwords can be cracked in seconds.
+        </p>
+
+        <h4 className="mt-4 text-neon-cyan">Pro Tips</h4>
+        <ul className="mt-2">
+          <li>✓ Dictionary Attack is your friend—use it first always</li>
+          <li>✓ The Hint is worth -30 points but saves you time and frustration</li>
+          <li>✓ Common passwords are still the #1 vulnerability (don't use them in real life!)</li>
+          <li>✓ If you give up, you learn the password for future reference</li>
+          <li>✓ Try variations: add 1-3 numbers at the end (123, 99, 2024)</li>
+        </ul>
       </HowToPlay>
     </>
   );
