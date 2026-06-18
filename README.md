@@ -393,9 +393,4 @@ Ideal for:
 ---
 
 ## Team & Attribution
-Developed as a cybersecurity training platform for the modern era.
-
----
-
-## License
-MIT License - See LICENSE file for details.
+Developed as a cybersecurity training platform for the modern era during the 2026 Cipherhacks Competetion. 
